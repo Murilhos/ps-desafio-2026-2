@@ -12,28 +12,23 @@ export function DashboardSummaryCards({
   membersCount,
   projectsCount,
 }: DashboardSummaryCardsProps) {
-  const [membersValue] = useState(
-    () => membersCount + Math.round(Math.random()),
-  )
-  const [projectsValue] = useState(
-    () => projectsCount + Math.round(Math.random()),
-  )
-
   return (
     <section className="grid gap-4 md:grid-cols-2">
       <DashboardContainer className="space-y-2">
         <p className="text-sm font-medium text-muted-foreground">
           Membros registrados
         </p>
-        <p className="text-3xl font-bold">{membersValue}</p>
+        <p className="text-3xl font-bold">{membersCount}</p>
       </DashboardContainer>
 
       <DashboardContainer className="space-y-2">
         <p className="text-sm font-medium text-muted-foreground">
           Projetos registrados
         </p>
-        <p className="text-3xl font-bold">{projectsValue}</p>
+        <p className="text-3xl font-bold">{projectsCount}</p>
       </DashboardContainer>
     </section>
   )
 }
+
+
