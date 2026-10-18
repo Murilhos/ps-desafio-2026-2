@@ -17,6 +17,20 @@ import { DialogProjetoDelete } from './dialog-delete-project'
 import { DialogInformationProjeto } from './dialog-information-project'
 import { DialogCreateProjeto } from './dialog-create-project'
 
+/*Formata datas do tipo 'YYY-MM-DD' de forma puramente deterministica
+ *Evita desvios de fso horário (day shift) e elimina erros de hidratação (SSR vs Client).
+ *Utilizei IA para me auxiliar a montar a função*/
+function formatDate(dateString: string): string {
+  if (!dateString) return '-'
+
+  const [datePart] = dateString.split('T')
+  const parts = datePart.split('-')
+  if (parts.length !== 3) return dateString
+
+  const [year, month, day] = parts
+  return `${day}/${month}/${year}`
+}
+
 export default async function ListProjects() {
   const { response } = await api<projetoType[]>('GET', '/projetos')
 
@@ -39,6 +53,8 @@ export default async function ListProjects() {
         </DialogCreateProjeto>
       </DashboardContainer>
       <DashboardContainer>
+        {/*Contento com rolagem horizontal. IMPLEMENTAÇÃO PARA RESPONSIVIDADE */}
+        <div className="w-full overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -55,10 +71,10 @@ export default async function ListProjects() {
                 <TableCell>{projeto.nome}</TableCell>
                 <TableCell>{projeto.nome_cliente}</TableCell>
                 <TableCell>
-                  {new Date(projeto.data_inicio).toLocaleDateString('pt-BR')}
+                  {formatDate(projeto.data_inicio)}
                 </TableCell>
                 <TableCell>
-                  {new Date(projeto.data_fim).toLocaleDateString('pt-BR')}
+                  {formatDate(projeto.data_fim)}
                 </TableCell>
                 <TableCell className="flex justify-end gap-2">
                   <DialogInformationProjeto projeto={projeto}>
@@ -84,6 +100,7 @@ export default async function ListProjects() {
             <TableCaption>Nenhum projeto encontrado.</TableCaption>
           )}
         </Table>
+        </div>
       </DashboardContainer>
     </>
   )
