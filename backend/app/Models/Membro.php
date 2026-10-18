@@ -13,6 +13,7 @@ class Membro extends Model
     protected $fillable = [
         'nome',
         'email',
+        'senha' => 'hashed',
         'cor_favorita',
         'data_aniversario',
         'image',

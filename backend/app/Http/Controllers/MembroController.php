@@ -6,6 +6,7 @@ use App\Models\Membro;
 use App\Http\Requests\StoreMembroRequest;
 use App\Http\Requests\UpdateMembroRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
@@ -35,6 +36,11 @@ class MembroController extends Controller
     public function store(StoreMembroRequest $request): JsonResponse
     {
         $validatedData = $request->validated();
+        
+        // Aqui a IA me ajudou, pois eu acabei deixando passar reto que a senha não fosse criptografada antes de salvar no banco.
+        if (!empty($validatedData['senha'])) {
+            $validatedData['senha'] = Hash::make($validatedData['senha']);
+        }
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('Membro', 'public');
@@ -64,6 +70,10 @@ class MembroController extends Controller
     {
         $validatedData = $request->validated();
         $membro = $this->membro->findOrFail($id);
+
+        if (!empty($validatedData['senha'])) {
+            $validatedData['senha'] = Hash::make($validatedData['senha']);
+        }
 
         if ($request->hasFile('image')) {
             if ($membro->image) {

@@ -22,11 +22,11 @@ class StoreProjetoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nome' => 'required',
-            'nome_cliente' => 'required',
-            'descricao' => 'required',
-            'data_inicio' => 'required|date',
-            'data_fim' => 'required|date',
+            'nome' => ['required', 'string', 'max:255'], //Faltava limite de caracteres, adicionei max:255
+            'nome_cliente' => ['required', 'string', 'max:255'], //Mesma coisa, adicionei max:255
+            'descricao' => ['required', 'string'],
+            'data_inicio' => ['required', 'date'],
+            'data_fim' => ['required', 'date', 'after_or_equal:data_inicio'], // Data fim valida apenas se for igual ou posterior a data de início.
         ];
     }
 }

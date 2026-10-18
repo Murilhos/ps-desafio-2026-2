@@ -91,9 +91,10 @@ class UserController extends Controller
      */
     public function destroy(User $user): JsonResponse
     {
-        $loggedUser = auth()->user();
-
-        if ($loggedUser['id'] == $user['id']) {
+        //$loggedUser = auth()->user();
+        /* Pelo o que eu entendi, o auth()->user() retorna o usuário logado, retornando um objeto e não um array. O problema é que a interface genérica Authenticatable não implementa ArrayAccess 
+        então tentar aceder ao campo em $loggedUser ['id'] acaba por dar error. Ademais, auth()->user() também pode retorar null, que foi o que tava travando nas requisições*/
+        if (auth()->id() == $user->id) {
             return response()->json(['message' => 'Usuários não podem se deletar.'], Response::HTTP_FORBIDDEN);
         }
 

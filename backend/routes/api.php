@@ -21,6 +21,6 @@ Route::get('/', function () {
 });
 
 Route::apiResource('membros', \App\Http\Controllers\MembroController::class);
-Route::resource('projetos', \App\Http\Controllers\ProjetoController::class);
+Route::apiResource('projetos', \App\Http\Controllers\ProjetoController::class); //Estava escrito resource, ao invés de apiResource. Route::resource cria rotas para views (interface web), enquanto apiResource cria rotas para API.
 
 require __DIR__.'/auth.php';

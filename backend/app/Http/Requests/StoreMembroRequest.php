@@ -12,7 +12,7 @@ class StoreMembroRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true; //Estava como falso e estava bloqueado as requisições de store, alterei para true.
     }
 
     /**
@@ -23,9 +23,9 @@ class StoreMembroRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nome' => ['required'],
+            'nome' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'max:255'],
-            'senha' => [
+            'senha' => [ 'required', 'string', 'max:255',
                 Password::min(8)
                     ->letters()
                     ->mixedCase()
@@ -33,7 +33,7 @@ class StoreMembroRequest extends FormRequest
                     ->symbols(),
             ],
             'cor_favorita' => ['nullable', 'string', 'max:255'],
-            'data_aniversario' => ['nullable', 'date'],
+            'data_aniversario' => ['required', 'date'],
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp'],
         ];
     }
