@@ -12,7 +12,7 @@ class StoreMembroRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true; //Estava como falso e estava bloqueado as requisições de store, alterei para true.
+        return true; //Estava como falso e estava bloqueado as requisições de store (403 Forbidden), alterei para true.
     }
 
     /**
@@ -24,7 +24,7 @@ class StoreMembroRequest extends FormRequest
     {
         return [
             'nome' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:membros,email'], //Agora impede email duplicados.
             'senha' => [ 'required', 'string', 'max:255',
                 Password::min(8)
                     ->letters()

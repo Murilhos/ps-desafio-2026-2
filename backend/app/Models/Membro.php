@@ -13,7 +13,7 @@ class Membro extends Model
     protected $fillable = [
         'nome',
         'email',
-        'senha' => 'hashed',
+        'senha',
         'cor_favorita',
         'data_aniversario',
         'image',
@@ -22,5 +22,15 @@ class Membro extends Model
     protected $hidden = [
         'senha',
     ];
+
+    /*Sugestão de casting para os campos, garantindo a formatação. A função casts() é usada para converter os valores 
+    dos atributos do modelo para tipos específicos quando eles são acessados. */
+    protected function casts(): array
+    {
+        return [
+            'data_aniversario' => 'date:d-m-Y',
+            'senha' => 'hashed',
+        ];
+    }
 }
 
