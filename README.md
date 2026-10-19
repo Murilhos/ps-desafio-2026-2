@@ -70,7 +70,7 @@ A modelagem partiu da análise das dores operacionais relatadas pela Diretoria d
 
 ---
 
-## 2. Levanatamento de Requisitos e Regras de Negócio
+## 2. Levantamento de Requisitos e Regras de Negócio
 1. Levantamento de requisitos 
     Atores
 
