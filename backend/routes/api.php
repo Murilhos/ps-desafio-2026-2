@@ -23,4 +23,14 @@ Route::get('/', function () {
 Route::apiResource('membros', \App\Http\Controllers\MembroController::class);
 Route::apiResource('projetos', \App\Http\Controllers\ProjetoController::class); //Estava escrito resource, ao invés de apiResource. Route::resource cria rotas para views (interface web), enquanto apiResource cria rotas para API.
 
+// Tarefas
+Route::apiResource('tarefas', \App\Http\Controllers\TarefaController::class);
+
+//Alocação de membros aos projetos
+Route::prefix('projetos/{projeto}/membros')->group(function () {
+    Route::get('/', [\App\Http\Controllers\AlocacaoController::class, 'index']);
+    Route::post('/', [\App\Http\Controllers\AlocacaoController::class, 'store']);
+    Route::delete('/{membro}', [\App\Http\Controllers\AlocacaoController::class, 'destroy']);
+});
+
 require __DIR__.'/auth.php';
