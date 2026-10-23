@@ -12,6 +12,10 @@ class ProjetoSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\Projeto::factory(10)->create();
+        // 6 projetos ativos para ter tarefas
+        \App\Models\Projeto::factory()->count(6)->ativo()->create();
+
+        // 4 projetos planejados
+        \App\Models\Projeto::factory()->count(4)->planejado()->create();
     }
 }

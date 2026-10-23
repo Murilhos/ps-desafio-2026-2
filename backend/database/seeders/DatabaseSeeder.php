@@ -23,5 +23,6 @@ class DatabaseSeeder extends Seeder
 
         $this->call(MembroSeeder::class);
         $this->call(ProjetoSeeder::class);
+        $this->call(TarefaSeeder::class);
     }
 }

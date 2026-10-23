@@ -28,6 +28,21 @@ class ProjetoFactory extends Factory
             'descricao' => fake()->paragraph(),
             'data_inicio' => $dataInicio->format('Y-m-d'),
             'data_fim' => $dataFim->format('Y-m-d'),
+            'status' => fake()->randomElement(['planejado', 'ativo', 'concluido', 'cancelado']), // Adicionado o atributo status para os Seeders
         ];
+    }
+
+    public function ativo(): static
+    {
+        return $this->state(fn () => [
+            'status' => 'ativo'
+        ]);
+    }
+
+    public function planejado(): static
+    {
+        return $this->state(fn () => [
+            'status' => 'planejado',
+        ]);
     }
 }
