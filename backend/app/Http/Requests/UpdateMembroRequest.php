@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class UpdateMembroRequest extends FormRequest
@@ -31,7 +32,7 @@ class UpdateMembroRequest extends FormRequest
                 'string', 
                 'email', 
                 'max:255',
-                'unique:membros,email,' . $this->route('membro') 
+                Rule::unique('membros', 'email')->ignore($this->route('membros'))
                 /*Aqui a IA me ajudou pois eu não sabia por que o banco tava me bloqueado mudar e como fazer para corrigir.*/
                 ],
             'senha' => [

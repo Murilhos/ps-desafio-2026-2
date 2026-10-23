@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class UpdateProjetoRequest extends FormRequest
 {
@@ -35,6 +37,36 @@ class UpdateProjetoRequest extends FormRequest
             'descricao' => ['sometimes', 'required', 'string'],
             'data_inicio' => ['sometimes', 'required', 'date'],
             'data_fim' => ['sometimes', 'required', 'date', 'after_or_equal:data_inicio'],
+            'status' => ['sometimes', 'nullable', Rule::in(['planejado', 'ativo', 'concluido', 'cancelado'])], // Adicionei validação para o campo status
         ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'nome.required' => 'O nome do projeto é obrigatório.',
+            'nome_cliente.required' => 'O nome do cliente é obrigatório.',
+            'descricao.required' => 'A descrição do projeto é obrigatória.',
+            'data_inicio.required' => 'A data de início é obrigatória.',
+            'data_inicio.date' => 'A data de início deve ser uma data válida.',
+            'data_fim.required' => 'A data de fim é obrigatória.',
+            'data_fim.date' => 'A data de fim deve ser uma data válida.',
+            'data_fim.after_or_equal' => 'A data de fim deve ser igual ou posterior à data de início.',
+        ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function ($validator) {
+            $dataInicio = $this->input('data_inicio');
+            $dataFim = $this->input('data_fim');
+
+            //Como no update os campos são opcionais, só valida se ambos vierem na requisição.
+            if (!$dataInicio || !$dataFim) return; // Se algum dos campos não estiver presente, não faz a validação adicional
+
+            if ($dataFim < $dataInicio) {
+                $validator->errors()->add('data_fim', 'A data de termino deve ser igual ou posterior à data de início.');
+            }
+        });
     }
 }

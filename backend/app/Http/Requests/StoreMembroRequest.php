@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class StoreMembroRequest extends FormRequest
@@ -24,7 +25,7 @@ class StoreMembroRequest extends FormRequest
     {
         return [
             'nome' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:membros,email'], //Agora impede email duplicados.
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('membros', 'email')], //Agora impede email duplicados.
             'senha' => [ 'required', 'string', 'max:255',
                 Password::min(8)
                     ->letters()
