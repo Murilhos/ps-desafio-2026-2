@@ -11,11 +11,12 @@ import {
 } from '@/components/dashboard/table'
 import { api } from '@/services/api'
 import { projetoType } from '@/types/projeto'
-import { LuInfo, LuPen, LuCirclePlus, LuTrash } from 'react-icons/lu'
+import { LuInfo, LuPen, LuCirclePlus, LuTrash, LuUsers } from 'react-icons/lu'
 import { DialogUpdateProjeto } from './dialog-update-project'
 import { DialogProjetoDelete } from './dialog-delete-project'
 import { DialogInformationProjeto } from './dialog-information-project'
 import { DialogCreateProjeto } from './dialog-create-project'
+import { DialogAllocateMember } from './dialog-allocate-member'
 
 /*Formata datas do tipo 'YYY-MM-DD' de forma puramente deterministica
  *Evita desvios de fso horário (day shift) e elimina erros de hidratação (SSR vs Client).
@@ -56,50 +57,57 @@ export default async function ListProjects() {
         {/*Contento com rolagem horizontal. IMPLEMENTAÇÃO PARA RESPONSIVIDADE */}
         <div className="w-full overflow-x-auto">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Início</TableHead>
-              <TableHead>Fim</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {response.map((projeto: projetoType) => (
-              <TableRow key={projeto.id}>
-                <TableCell>{projeto.nome}</TableCell>
-                <TableCell>{projeto.nome_cliente}</TableCell>
-                <TableCell>
-                  {formatDate(projeto.data_inicio)}
-                </TableCell>
-                <TableCell>
-                  {formatDate(projeto.data_fim)}
-                </TableCell>
-                <TableCell className="flex justify-end gap-2">
-                  <DialogInformationProjeto projeto={projeto}>
-                    <Button variant="default-inverse" size="icon">
-                      <LuInfo />
-                    </Button>
-                  </DialogInformationProjeto>
-                  <DialogUpdateProjeto projeto={projeto}>
-                    <Button variant="secondary-inverse" size="icon">
-                      <LuPen />
-                    </Button>
-                  </DialogUpdateProjeto>
-                  <DialogProjetoDelete id={projeto.id}>
-                    <Button variant="destructive-inverse" size="icon">
-                      <LuTrash />
-                    </Button>
-                  </DialogProjetoDelete>
-                </TableCell>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Início</TableHead>
+                <TableHead>Fim</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-          {!response.length && (
-            <TableCaption>Nenhum projeto encontrado.</TableCaption>
-          )}
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {response.map((projeto: projetoType) => (
+                <TableRow key={projeto.id}>
+                  <TableCell>{projeto.nome}</TableCell>
+                  <TableCell>{projeto.nome_cliente}</TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {formatDate(projeto.data_inicio)}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {formatDate(projeto.data_fim)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2 whitespace-nowrap">
+                      <DialogAllocateMember projeto={projeto}>
+                        <Button variant="secondary-inverse" size="icon" title="Gerenciar membros">
+                          <LuUsers />
+                        </Button>
+                      </DialogAllocateMember>
+                      <DialogInformationProjeto projeto={projeto}>
+                        <Button variant="default-inverse" size="icon">
+                          <LuInfo />
+                        </Button>
+                      </DialogInformationProjeto>
+                      <DialogUpdateProjeto projeto={projeto}>
+                        <Button variant="secondary-inverse" size="icon">
+                          <LuPen />
+                        </Button>
+                      </DialogUpdateProjeto>
+                      <DialogProjetoDelete id={projeto.id}>
+                        <Button variant="destructive-inverse" size="icon">
+                          <LuTrash />
+                        </Button>
+                      </DialogProjetoDelete>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+            {!response.length && (
+              <TableCaption>Nenhum projeto encontrado.</TableCaption>
+            )}
+          </Table>
         </div>
       </DashboardContainer>
     </>
