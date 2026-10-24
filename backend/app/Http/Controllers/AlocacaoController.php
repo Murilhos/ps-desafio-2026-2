@@ -9,6 +9,7 @@ use App\Services\AlocacaoService;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Exception;
 
 class AlocacaoController extends Controller
@@ -37,7 +38,7 @@ class AlocacaoController extends Controller
 
             return response()->json(['message' => "Membro alocado com sucesso."], Response::HTTP_CREATED);
         } catch (Exception $e) {
-            return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+            throw ValidationException::withMessages(['membro_id' => [$e->getMessage()]]); //Ao mexer no frontend, por conta de que não querer mexer no api.ts, optei por adequar o catch do store para que funcione com ele, a IA me ajudou me recomendando a importar a classe de Exceção 
         }
     }
 

@@ -15,7 +15,7 @@ export async function createProjeto(form: FormData) {
 }
 
 export async function updateProjeto(form: FormData) {
-  const res = await api('PUT', `/projetos/${form.get('id')}`, {
+  const res = await api('POST', `/projetos/${form.get('id')}`, {
     data: form,
   })
 
