@@ -32,7 +32,7 @@ class UpdateMembroRequest extends FormRequest
                 'string', 
                 'email', 
                 'max:255',
-                Rule::unique('membros', 'email')->ignore($this->route('membros'))
+                Rule::unique('membros', 'email')->ignore($this->route('membro'))
                 /*Aqui a IA me ajudou pois eu não sabia por que o banco tava me bloqueado mudar e como fazer para corrigir.*/
                 ],
             'senha' => [

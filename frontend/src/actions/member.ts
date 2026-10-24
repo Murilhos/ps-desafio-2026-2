@@ -14,7 +14,7 @@ export async function createMember(form: FormData) {
 }
 
 export async function updateMember(form: FormData) {
-  const res = await api('PUT', `/membros/${form.get('id')}`, {
+  const res = await api('POST', `/membros/${form.get('id')}`, {
     data: form,
   })
 

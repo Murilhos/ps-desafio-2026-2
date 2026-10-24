@@ -61,12 +61,17 @@ Esta seção documenta o processo de engenharia de requisitos, a modelagem relac
 
 ---
 
-## 1 Como Cheguei à Modelagem (Do Relato ao Modelo Relacional)
+## 1. Como Cheguei à Modelagem (Do Relato ao Modelo Relacional)
 
 A modelagem partiu da análise das dores operacionais relatadas pela Diretoria de Projetos(que seria o cliente do PS):
 1. **Descentralização do acompanhamento diário:** Existiam apenas `Projetos` e `Membros`, sem granularidade das entregas. Isso levou à criação da entidade **`Tarefas` (`tasks`)**.
+
 2. **Responsabilidade clara:** O relato exige que *"cada tarefa precisa ser obrigatoriamente atribuída a um membro específico"*. Portanto, na tabela de tarefas, a chave estrangeira `membro_id` foi definida como obrigatória (`NOT NULL`), estabelecendo uma relação **1:N** estrita entre Membro e Tarefas.
+
 3. **Alocação em múltiplos projetos e controle de sobrecarga:** Como um projeto possui vários membros e um membro participa de vários projetos, consolida-se a relação **N:N** através da tabela associativa (pivô) `membro_projeto`, protegida por restrição de unicidade composta `UNIQUE (projeto_id, membro_id)` para impedir alocações duplicadas (RN07).
+
+4. **Campo `status` ausente na base original:** A tabela `projetos` do repositório base não possuía o campo `status`, necessário para implementar a trava de alocação (RN08). Foi adicionado via nova
+migration com os valores `planejado`, `ativo`, `concluido` e `cancelado`, e valor padrão `planejado`.
 
 ---
 
@@ -74,8 +79,8 @@ A modelagem partiu da análise das dores operacionais relatadas pela Diretoria d
 1. Levantamento de requisitos 
     Atores
 
-        Diretor de Projetos: cadastra projetos, membros e tarefas e gerencia alocações.
-        Sistema: aplica validações e a trava de alocação. 
+    - **Diretor de Projetos:** cadastra projetos, membros e tarefas e gerencia alocações.
+    - **Sistema:** aplica validações e a trava de alocação. 
 
 2. Requisitos funcionais
 
@@ -141,6 +146,9 @@ A modelagem partiu da análise das dores operacionais relatadas pela Diretoria d
 
     RN13 - Violações retornam 422 com mensagem clara, por exemplo: “Ana Souza já está alocada em 2 projetos ativos e não pode ser alocada em outro.” 
 
+> **RN05, RN11 e RN12** são decisões de projeto não explicitadas no relato. Foram adicionadas para
+> garantir consistência dos dados e evitar estados inválidos no sistema.
+
 ---
 
 ## 3. Diagrama Entidade-Relacionamento (DER)
@@ -158,44 +166,64 @@ erDiagram
     MEMBROS ||--o{ TAREFAS : "é responsável por (1:N)"
 
     PROJETOS {
-        bigint id PK
+        uuid id PK
         string nome "NOT NULL"
-        text descricao "NULLABLE"
+        string nome_cliente "NOT NULL"
+        text descricao "NOT NULL"
         date data_inicio "NOT NULL"
-        date data_fim "NOT NULL (>= data_inicio)"
-        enum status "planejado | ativo | concluido | cancelado"
+        date data_fim "NOT NULL, >= data_inicio"
+        enum status "planejado|ativo|concluido|cancelado"
         timestamp created_at
         timestamp updated_at
     }
 
     MEMBROS {
-        bigint id PK
-        string nome "NOT NULL (max: 150)"
+        uuid id PK
+        string nome "NOT NULL, max 255"
         string email "NOT NULL, UNIQUE"
-        string cargo "NULLABLE"
+        string senha "NOT NULL, hashed"
+        string cor_favorita "NULLABLE"
+        date data_aniversario "NOT NULL"
+        string image "NULLABLE"
         timestamp created_at
         timestamp updated_at
     }
 
     MEMBRO_PROJETO {
-        bigint id PK
-        bigint projeto_id FK "NOT NULL, ON DELETE CASCADE"
-        bigint membro_id FK "NOT NULL, ON DELETE CASCADE"
+        uuid id PK
+        uuid projeto_id FK "NOT NULL, CASCADE"
+        uuid membro_id FK "NOT NULL, CASCADE"
+        unique projeto_id_membro_id "RN07"
         timestamp created_at
         timestamp updated_at
     }
 
     TAREFAS {
-        bigint id PK
-        bigint projeto_id FK "NOT NULL, ON DELETE CASCADE"
-        bigint membro_id FK "NOT NULL, ON DELETE RESTRICT"
+        uuid id PK
+        uuid projeto_id FK "NOT NULL, CASCADE"
+        uuid membro_id FK "NOT NULL, RESTRICT"
         string titulo "NOT NULL"
         text descricao "NULLABLE"
-        enum status "pendente | em_andamento | concluida"
+        enum status "pendente|em_andamento|concluida"
+        date prazo "NULLABLE"
         timestamp created_at
         timestamp updated_at
     }
 ```
+
+---
+
+## 4. Lógica da Trava de Alocação (RN08)
+
+A trava impede que um membro seja alocado em mais de 2 projetos `ativo` simultaneamente. Foi implementada no `AlocacaoService` por três motivos:
+
+1. **Reutilização:** a mesma lógica roda em dois momentos distintos (ao alocar e ao ativar um projeto), então centralizá-la num Service evita duplicação de código.
+
+2. **Segurança contra concorrência:** a verificação usa `DB::transaction()` com `lockForUpdate()` no registro do membro, garantindo que duas requisições simultâneas não consigam furar o limite.
+
+3. **Separação de responsabilidades:** o Controller apenas orquestra, o Service aplica a regra. Isso segue o princípio SRP (Single Responsibility Principle).
+
+
 
 ### Resumo dos Relacionamentos no Eloquent (Laravel)
 * **`Projeto` (`Project`)**:
@@ -210,4 +238,117 @@ erDiagram
 
 ---
 
+## Extras
+
+
+### 1. Factories e Seeders de Tarefas
+
+Criados `TarefaFactory` e `TarefaSeeder` seguindo o padrão do projeto.
+
+A Factory possui quatro estados:
+- `pendente()` → tarefa com status pendente
+- `emAndamento()` → tarefa em andamento
+- `concluida()` → tarefa concluída
+- `atrasada()` → tarefa pendente com prazo no passado
+
+O Seeder respeita a RN08 ao alocar membros, verificando o limite antes
+de cada alocação via `syncWithoutDetaching`.
+
+---
+
+### 2. Alterações/ Correções do código
+
+**Backend:**
+- `StoreProjetoRequest` e `UpdateProjetoRequest`: adicionada validação
+de datas via `withValidator`.
+- `StoreMembroRequest`: corrigido `authorize()` de `false` para `true`,
+adicionada regra `Rule::unique` no e-mail.
+- `UpdateMembroRequest`: adicionado `Rule::unique()->ignore()` para
+permitir edição do próprio e-mail.
+- `ProjetoController` e `MembroController`: corrigido `Route::resource`
+para `Route::apiResource`.
+- `add_status_to_projetos_table`: A tabela projetos original não tinha status,
+que é necessário para a trava de alocação, então criou-se uma nova migration e
+adição ao $fillable do Model.
+- `create_membro_projeto_table`: O attach() tentava inserir sem gerar o UUID da pivot,
+causando erro de banco. A solução foi a criação de `MembroProjeto` extends `Pivot` com `HasUuids`, 
+e adição de `->using(MembroProjeto::class)` nos relacionamentos `belongsToMany` de `Projeto`
+e `Membro`.
+
+
+**Frontend:**
+- `actions/member.ts` e `actions/projeto.ts`: alterado o método da função
+update de 'PUT' para 'POST', para que as alterações sejam exibidas na tela.
+- `action/projeto.ts`: Adicionada funções para alocação de membros no projeto.
+- `_components/form-fields-member.tsx` e `_components/form-fields-project.tsx`:
+Adequações para as novas implementações, como a adição de status no forms do project
+- `_components/list-project.tsx`: Importação do ícone LuUsers e adição do componente
+- `_components/dialog-allocate-member`: Criação do modal par alocação de membros
+DialogAllocateMember na coluna de ações à tabela. Criação de uma função utilitária para 
+converter as strings YYYY-MM-DD para DD-MM-YYYY, evitando erros de hidratação entre SSR e Client.
+- `src/app/(dashboard)/admin/tarefas/page.tsx`: Página principal da rota /admin/tarefas no painel administrativo. 
+- `_components/list-tarefas.tsx`: Componente de tabela para listagem das tarefas, formatação de status/prazos e acionamento dos modais de ação.
+- `_components/form-fields-tarefa.tsx`: Estrutura dos campos de formulário de tarefas (titulo, descricao, seleção de projeto em projeto_id, seleção de membro alocado em membro_id, status e prazo).
+- `_components/dialog-create-tarefa.tsx`: Modal de cadastro de nova tarefa.
+- `_components/dialog-update-tarefa.tsx`: Modal de atualização de tarefa existente.
+- `_components/dialog-information-tarefa.tsx`: Modal de visualização de detalhes da tarefa (modo somente leitura).
+- `_components/dialog-delete-tarefa.tsx`: Modal de confirmação e exclusão de tarefa.
+- Componente de Sidebar / Navegação: Inclusão da rota Tarefas (/admin/tarefas) no menu lateral do dashboard, abaixo de Membros e Projetos
+
+---
+# Demonstração e Testes
+
+## PROJETO
+
+### Criação e exclusão de projetos
+![Criação de um Projeto](./docs/criacaoProjeto.png)
+
+![Projetos Criados](./docs/projetoCriados.png)
+
+![Alocacao](./docs/alocacao.png)
+
+![Exclusão Projeto](./docs/exclusao.png)
+
+![Excluido](./docs/excluido.png)
+
+## MEMBRO
+
+### Criação e edição de membro
+![Criação Novo Membro](./docs/criacaoMembro.png)
+
+![Editar Membro](./docs/editar.png)
+
+![Edição Concluída](./docs/edicaoConcluida.png)
+
+## TAREFAS
+
+### Criação e exclusão de tarefas
+
+![Tarefa Criada](./docs/tarefaCriada.png)
+
+---
+
+
 # USOS DE IA
+> **Onde a IA ajudou:**
+> - Explicação de como funciona o Mermaid para a criação da tabela no README
+> - Explicação de conceitos (hydration mismatch, lockForUpdate, pivot)
+> - Depuração de erros durante os testes no Postman
+> - Explicação da necessidade de aplicar o hash na senha
+> - Explicação de como combinar as regras sometimes e required para validar apenas os campos efetivamente enviados na requisição
+> - Auxílio no diagnóstico do motivo pelo qual requisições PUT contendo FormData (especialmente com upload de imagem)
+>   retornavam sucesso sem alterar os dados no PHP/Laravel
+> - Explicações de como funciona a comunicação entre o front e backend
+> - Pesquisa de boas práticas para se fazer, afim de preservar o histórico do código legado
+> - Auxílio nas pesquisa sobre as classes e bibliotecas
+> - Sugestões de formatações dos textos no back/frontend
+> - Auxilio na resolução dos problemas das datas de aniversário que não queriam ser exibidas
+
+> **Limitações/Dificuldades encontradas:**
+> - Manipulaçao do Tailwind, certas funcionalidades não funcionaram como esperado
+> - Algumas funcionalidades nos modais não funcionaram conforme o esperado,
+>   ao tentar encontrar uma forma de contornar a IA me aconselhava a realizar mudanças que iam
+>   longe do que foi passado em aula, então optei por não fazer
+> - O código base precisou ser alterado algumas vezes (principalmente no frontend), mas como
+>   estava prezando pela integridade do código legado, e evitar de quebrar alguma coisa, optei
+>   por emxer pouco

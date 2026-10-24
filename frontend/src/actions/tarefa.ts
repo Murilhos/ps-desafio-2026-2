@@ -22,7 +22,7 @@ export async function createTarefa(form: FormData) {
 }
 
 export async function updateTarefa(form: FormData) {
-  const res = await api('PUT', `/tarefas/${form.get('id')}`, {
+  const res = await api('POST', `/tarefas/${form.get('id')}`, {
     data: form,
   })
 

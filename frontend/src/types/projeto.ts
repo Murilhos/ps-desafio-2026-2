@@ -8,7 +8,7 @@ export type projetoType = {
   descricao: string
   data_inicio: string
   data_fim: string
-  status?: 'planejamento' | 'ativo' | 'concluido' | 'cancelado' | string
+  status?: 'planejado' | 'ativo' | 'concluido' | 'cancelado' | string
   membros?: membroType[]
   tarefas?: tarefaType[]
   created_at?: string
