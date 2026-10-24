@@ -28,7 +28,11 @@ export function DialogUpdateMember({ member, children }: DialogUpdateMemberProps
   const submit = async (form: FormData) => {
     const newForm = await filterFormData(form);
 
+    console.log('Dados enviados:', Object.fromEntries(newForm.entries()))
+
     const { error } = await JSON.parse(await updateMember(newForm));
+
+    console.log('Resposta do servidor:', error)
 
     if (error) {
       toast({

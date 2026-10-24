@@ -1,3 +1,6 @@
+import { membroType } from './member'
+import { tarefaType } from './tarefa'
+
 export type projetoType = {
   id: string
   nome: string
@@ -5,6 +8,10 @@ export type projetoType = {
   descricao: string
   data_inicio: string
   data_fim: string
+  status?: 'planejamento' | 'ativo' | 'concluido' | 'cancelado' | string
+  membros?: membroType[]
+  tarefas?: tarefaType[]
   created_at?: string
   updated_at?: string
 }
+
