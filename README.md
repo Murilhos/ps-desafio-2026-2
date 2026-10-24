@@ -322,7 +322,7 @@ converter as strings YYYY-MM-DD para DD-MM-YYYY, evitando erros de hidratação 
 
 ## TAREFAS
 
-### Criação e exclusão de tarefas
+### Criação de tarefas
 
 ![Tarefa Criada](./docs/tarefaCriada.png)
 
